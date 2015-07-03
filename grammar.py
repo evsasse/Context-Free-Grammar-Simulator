@@ -31,9 +31,14 @@ class Grammar():
 
 		# Expecting a list of symbols. Otherwise, if it's a string, split on spaces
 		if not isinstance(symbols,list):
+			symbols = symbols.strip()
 			symbols = symbols.split(' ')
 
+		# print("First de", symbols)
+
 		try:
+			if symbols == []:
+				return {'&'}
 			if symbols[0] == '&' and len(symbols) > 1:
 				return self._first(symbols[1:])
 			if symbols[0] in self._terminals:
@@ -49,7 +54,42 @@ class Grammar():
 			raise Exception("Should check for Left Factoring and against Left Recursion before calling _first")
 
 	def _follow(self, symbol):
-		pass
+		if symbol not in self._nonterminals:
+			raise Exception("Symbol should be on the nonterminals")
+
+		follow = {}
+		_follow = {}
+		for nonterminal in self._nonterminals:
+			follow[nonterminal] = set()
+		follow[self._initial_symbol] = {'$'}
+
+		for production in self._productions:
+			# for each nonterminal on the production-right
+			for (position, nonterminal) in [(p,s) for (p,s) in enumerate(production.right) if s in self._nonterminals]:
+				# add the first of the remainder right side after it to its follow
+				# print("follow de",nonterminal)
+				follow[nonterminal] |= self._first(production.right[position+1:])
+			# for each nonterminal that has & on its follow
+			for nonterminal in [nt for nt in follow if '&' in follow[nt]]:
+				# remove & from the follow, and add the production-left nonterminal to its follow
+				# this nonterminal will be swapped later
+				# also remove the own nonterminal from its follow
+				follow[nonterminal] -= {'&'}
+				follow[nonterminal] |= {production.left}
+				follow[nonterminal] -= {nonterminal}
+
+		while follow != _follow:
+			_follow = follow.copy()
+			for nonterminal in self._nonterminals:
+				# for each nonterminal _nonterminal in the follow of other nonterminal
+				for _nonterminal in [nt for nt in follow[nonterminal] if nt in self._nonterminals]:
+					# swap _nonterminal for its follow and remove _nonterminal from the follow
+					# also remove the own nonterminal from its follow
+					follow[nonterminal] -= {_nonterminal}
+					follow[nonterminal] |= follow[_nonterminal]
+					follow[nonterminal] -= {nonterminal}
+
+		return follow[symbol]
 
 	def is_ll1(self):
 		return self._have_left_recursion() and self._is_left_factored() and self._have_first_follow_conflict()

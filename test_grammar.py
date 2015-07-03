@@ -17,9 +17,12 @@ class TestGrammar(unittest.TestCase):
 		g = Grammar.text_to_grammar(s)
 		self.assertEqual(g._productions, {Production('S1','a'), Production('S1',['b','S1','a'])})
 
-		s = "C -> if E then C C' | comando\nC' -> else C | &\nE -> exp"
+		s = "C -> if E then C C' | comando\n"
+		s +="C' -> else C | &\n"
+		s +="E -> exp"
 		g = Grammar.text_to_grammar(s)
-		self.assertEqual(g._productions, {Production("C","if E then C C'"), Production("C","comando"), Production("C'","else C"), Production("C'","&"), Production("E","exp")})
+		self.assertEqual(g._productions, {Production("C","if E then C C'"), Production("C","comando"),\
+		 Production("C'","else C"), Production("C'","&"), Production("E","exp")})
 
 	def test_first(self):
 		s = "S -> a"
@@ -36,10 +39,70 @@ class TestGrammar(unittest.TestCase):
 		g = Grammar.text_to_grammar(s)
 		self.assertEqual(g._first("S1"),{'a','b'})
 
-		s = "C -> if E then C C' | comando\nC' -> else C | &\nE -> exp"
+		s = "C -> if E then C C' | comando\n"
+		s +="C' -> else C | &\n"
+		s +="E -> exp"
 		g = Grammar.text_to_grammar(s)
 		self.assertEqual(g._first("C"),{'if','comando'})
 		self.assertEqual(g._first("C'"),{'else','&'})
 		self.assertEqual(g._first("E"),{'exp'})
 		self.assertEqual(g._first("E C"),{'exp'})
 		self.assertEqual(g._first("C' E"),{'else','exp'})
+
+		s = "S -> A b | A B c\n"
+		s +="B -> b B | A d | &\n"
+		s +="A -> a A | &"
+		g = Grammar.text_to_grammar(s)
+		self.assertEqual(g._first("S"),{'a','b','c','d'})
+		self.assertEqual(g._first("B"),{'a','b','d','&'})
+		self.assertEqual(g._first("A"),{'a','&'})
+
+		s = "S -> A B C\n"
+		s +="A -> a A | &\n"
+		s +="B -> b B | A C d\n"
+		s +="C -> c C | &"
+		g = Grammar.text_to_grammar(s)
+		self.assertEqual(g._first("S"),{'a','b','c','d'})
+		self.assertEqual(g._first("B"),{'b','a','c','d'})
+		self.assertEqual(g._first("A"),{'a','&'})
+		self.assertEqual(g._first("C"),{'c','&'})
+
+
+	def test_follow(self):
+		s = "S -> a"
+		g = Grammar.text_to_grammar(s)
+		self.assertEqual(g._follow('S'),{'$'})
+
+		s = "S -> b S | a"
+		g = Grammar.text_to_grammar(s)
+		self.assertEqual(g._follow('S'),{'$'})
+
+		s = "S1 -> b S1 a | a"
+		g = Grammar.text_to_grammar(s)
+		self.assertEqual(g._follow("S1"),{'$','a'})
+
+		s = "C -> if E then C C' | comando\n"
+		s +="C' -> else C | &\n"
+		s +="E -> exp"
+		g = Grammar.text_to_grammar(s)
+		self.assertEqual(g._follow("C"),{'$','else'})
+		self.assertEqual(g._follow("C'"),{'$','else'})
+		self.assertEqual(g._follow("E"),{'then'})
+
+		s = "S -> A b | A B c\n"
+		s +="B -> b B | A d | &\n"
+		s +="A -> a A | &"
+		g = Grammar.text_to_grammar(s)
+		self.assertEqual(g._follow("S"),{'$'})
+		self.assertEqual(g._follow("B"),{'c'})
+		self.assertEqual(g._follow("A"),{'a','b','c','d'})
+
+		s = "S -> A B C\n"
+		s +="A -> a A | &\n"
+		s +="B -> b B | A C d\n"
+		s +="C -> c C | &"
+		g = Grammar.text_to_grammar(s)
+		self.assertEqual(g._follow("S"),{'$'})
+		self.assertEqual(g._follow("B"),{'c','$'})
+		self.assertEqual(g._follow("A"),{'a','b','c','d'})
+		self.assertEqual(g._follow("C"),{'d','$'})
