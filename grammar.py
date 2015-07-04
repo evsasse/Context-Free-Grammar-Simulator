@@ -25,9 +25,9 @@ class Grammar():
 		return st
 
 	def _first(self, symbols):
-		# CAN EASILY CAUSE STACK OVERFLOW WHEN THERE IS LEFT RECURSION OR IS NOT LEFT FACTORED
+		# CAN EASILY CAUSE STACK OVERFLOW WHEN THERE IS LEFT RECURSION
 		# Not a problem if called just on _have_first_follow_conflict
-		# because it's called just after a check for left recursion and left factoring
+		# because it's called just after a check for left recursion
 
 		# Expecting a list of symbols. Otherwise, if it's a string, split on spaces
 		if not isinstance(symbols,list):
@@ -51,7 +51,7 @@ class Grammar():
 					firsts |= self._first(symbols[1:])
 				return firsts
 		except RuntimeError:
-			raise Exception("Should check for Left Factoring and against Left Recursion before calling _first")
+			raise Exception("Should check against Left Recursion before calling _first")
 
 	def _follow(self, symbol):
 		if symbol not in self._nonterminals:
@@ -92,13 +92,30 @@ class Grammar():
 		return follow[symbol]
 
 	def is_ll1(self):
-		return self._have_left_recursion() and self._is_left_factored() and self._have_first_follow_conflict()
+		return not self._have_left_recursion() and self._is_left_factored() and not self._have_first_follow_conflict()
 
 	def _have_left_recursion(self):
 		pass
 
 	def _is_left_factored(self):
-		pass
+		firsts = {}
+
+		# for each production
+		for production in self._productions:
+			# adds its _first in a set related to the production-left
+			if production.left not in firsts:
+				firsts[production.left] = self._first(production.right)
+			else:
+				_first = self._first(production.right)
+				# if there is any intersection between firsts of a same nonterminal
+				if _first & firsts[production.left]:
+					# then it's not left factored
+					return False
+				firsts[production.left] |= _first
+
+		# if it ends the loop and none intersection was found
+		# then is left factored
+		return True
 
 	def _have_first_follow_conflict(self):
 		pass
