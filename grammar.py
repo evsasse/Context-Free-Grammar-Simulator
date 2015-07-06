@@ -34,8 +34,6 @@ class Grammar():
 			symbols = symbols.strip()
 			symbols = symbols.split(' ')
 
-		# print("First de", symbols)
-
 		try:
 			if symbols == []:
 				return {'&'}
@@ -67,7 +65,6 @@ class Grammar():
 			# for each nonterminal on the production-right
 			for (position, nonterminal) in [(p,s) for (p,s) in enumerate(production.right) if s in self._nonterminals]:
 				# add the first of the remainder right side after it to its follow
-				# print("follow de",nonterminal)
 				follow[nonterminal] |= self._first(production.right[position+1:])
 			# for each nonterminal that has & on its follow
 			for nonterminal in [nt for nt in follow if '&' in follow[nt]]:
@@ -111,6 +108,7 @@ class Grammar():
 				if _first & firsts[production.left]:
 					# then it's not left factored
 					return False
+					# TODO:CHANGE THIS TO RETURN A LIST OF THE NON-LEFT FACTORED NON-TERMINALS
 				firsts[production.left] |= _first
 
 		# if it ends the loop and none intersection was found
@@ -118,11 +116,19 @@ class Grammar():
 		return True
 
 	def _have_first_follow_conflict(self):
-		pass
+		# for each nonterminal that can reach &
+		for nonterminal in [nt for nt in self._nonterminals if '&' in self._first(nt)]:
+			# if there is an intersection between its first and follow
+			if self._first(nonterminal) & self._follow(nonterminal):
+				return True
+				# TODO:CHANGE THIS TO RETURN A LIST OF THE NON-LEFT FACTORED NON-TERMINALS
+
+		# if there isnt any intersection between the first and follow of
+		# nonterminals that can reach &, then there is no conflict
+		return False
 
 	@staticmethod
 	def text_to_grammar(text):
-		# TAKE ACCOUNT OF 2nd OBSERVATION
 
 		terminals = set()
 		nonterminals = set()
@@ -144,11 +150,9 @@ class Grammar():
 
 			for right in rights.split('|'):
 				right = right.strip()
+				# any symbol that isnt on production-left of any line is considered terminal
 				terminals |= {symbol for symbol in right.split(' ') if symbol not in nonterminals}
 				productions |= {Production(left,right.split(' '))}
-
-		# if terminals & Grammar.__possible_nonterminals != set():
-		# 	raise Exception("Possible non-terminal used without productions related to it!")
 
 		grammar = Grammar(terminals, nonterminals, initial_symbol)
 		grammar._productions = productions
