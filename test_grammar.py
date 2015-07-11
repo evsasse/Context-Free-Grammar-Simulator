@@ -106,3 +106,14 @@ class TestGrammar(unittest.TestCase):
 		self.assertEqual(g._follow("B"),{'c','$'})
 		self.assertEqual(g._follow("A"),{'a','b','c','d'})
 		self.assertEqual(g._follow("C"),{'d','$'})
+
+	def test_have_left_recursion(self):
+		s = "A -> F C a | E A\nB -> C G h\nC -> D B a | b h | c | epsilon\nD -> F e | epsilon\nE -> G h | D f\nF -> E A | d F | epsilon\nG -> g"
+		g = Grammar.text_to_grammar(s)
+		pass
+
+	def test_is_left_factored(self):
+		pass
+
+	def test_have_first_follow_conflict(self):
+		pass

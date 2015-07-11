@@ -92,7 +92,20 @@ class Grammar():
 		return not self._have_left_recursion() and self._is_left_factored() and not self._have_first_follow_conflict()
 
 	def _have_left_recursion(self):
-		pass
+		# unfortunately the only way I've found to make ir work :/
+
+		nts_leads_to_lr = set()
+
+		for nt in self._nonterminals:
+			try:
+				self._first([nt])
+			except Exception:
+				print(nt)
+				nts_leads_to_lr |= {nt}
+
+		if nts_leads_to_lr == set():
+			return False
+		raise Exception('Some nonterminals lead to Left Recursion',nts_leads_to_lr)
 
 	def _is_left_factored(self):
 		firsts = {}
