@@ -38,3 +38,22 @@ class TestRecursiveDescentParser(unittest.TestCase):
 		raise Exception('B','d',current_symbol)
 '''
 		self.assertEqual(c,r._parser_code_production(Production('B','A C d'),'B'))
+
+	def test_parser_code_nonterminal(self):
+		s = "S -> A B C\n"
+		s +="A -> a A | &\n"
+		s +="B -> b B | A C d\n"
+		s +="C -> c C | &"
+		g = Grammar.text_to_grammar(s)
+		r = RecursiveDescentParser(g)
+
+		c = '''\
+def S(current_symbol):
+	if current_symbol in ['a', 'b', 'c', 'd']:
+		A(current_symbol)
+		B(current_symbol)
+		C(current_symbol)
+\t
+	else:
+		raise Exception('S',['a', 'b', 'c', 'd'],current_symbol)'''
+		self.assertEqual(c,r._parser_code_nonterminal('S'))
