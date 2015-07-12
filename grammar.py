@@ -197,3 +197,8 @@ class Production():
 
 	def __eq__(self, other):
 		return self.left == other.left and self.right == other.right
+
+	def __lt__(self, other):
+		if self.left != other.left:
+			return False
+		self.right < other.right
