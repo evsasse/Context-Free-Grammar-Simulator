@@ -105,13 +105,17 @@ class Grammar():
 
 		if nts_leads_to_lr == set():
 			return False
-		raise Exception('Some nonterminals lead to Left Recursion',nts_leads_to_lr)
+		raise Exception('LEFT_RECURSION',nts_leads_to_lr)
 
 	def _is_left_factored(self):
 		firsts = {}
 
+		nts_non_left_factored = set()
+
 		# for each production
 		for production in self._productions:
+			if production.left in nts_non_left_factored:
+				continue
 			# adds its _first in a set related to the production-left
 			if production.left not in firsts:
 				firsts[production.left] = self._first(production.right)
@@ -120,21 +124,30 @@ class Grammar():
 				# if there is any intersection between firsts of a same nonterminal
 				if _first & firsts[production.left]:
 					# then it's not left factored
-					return False
-					# TODO:CHANGE THIS TO RETURN A LIST OF THE NON-LEFT FACTORED NON-TERMINALS
+					#return False
+					nts_non_left_factored |= {production.left}
+					continue
 				firsts[production.left] |= _first
+
+		if nts_non_left_factored != set():
+			raise Exception('LEFT_FACTORING',nts_non_left_factored)
 
 		# if it ends the loop and none intersection was found
 		# then is left factored
 		return True
 
 	def _have_first_follow_conflict(self):
+		nts_with_conflict = set()
+
 		# for each nonterminal that can reach &
 		for nonterminal in [nt for nt in self._nonterminals if '&' in self._first(nt)]:
 			# if there is an intersection between its first and follow
 			if self._first(nonterminal) & self._follow(nonterminal):
-				return True
-				# TODO:CHANGE THIS TO RETURN A LIST OF THE NON-LEFT FACTORED NON-TERMINALS
+				#return True
+				nts_with_conflict |= {nonterminal}
+
+		if nts_with_conflict != set():
+			raise Exception('FIRST_FOLLOW_CONFLICT',nts_with_conflict)
 
 		# if there isnt any intersection between the first and follow of
 		# nonterminals that can reach &, then there is no conflict
