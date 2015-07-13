@@ -50,38 +50,37 @@ class GUI(QDialog):
 			g = Grammar.text_to_grammar(self.ui.text_grammar.toPlainText())
 			r = RecursiveDescentParser(g)
 			self._current_parser = r
-			self.ui.text_parser.setText(r.parser_code().strip().replace('\t','    '))
+			self.ui.text_parser.setText(r.parser_code(self.log).strip().replace('\t','    '))
 			QMessageBox.information(self,'Geração do parser descendente recursivo','O parser foi gerado!')
 
 	def btn_clear_clicked(self):
 		self.ui.text_log.setText('')
 
 	def btn_recognize_clicked(self):
-		self.log('Verificando se a sentença é reconhecida pelo parser')
-
 		if self._current_parser == None:
 			QMessageBox.critical(self,'Reconhecimento de sentença','O parser ainda não foi gerado!')
 			raise Exception('Reconhecimento de sentença','O parser ainda não foi gerado!')
 
 		try:
 			sentence = self.ui.line_sentence.text()
-			self._current_parser.parse(sentence)
+			self.log('Verificando se a sentença "%s" é reconhecida pelo parser'%(sentence))
+			self._current_parser.parse(sentence,self.log)
 			QMessageBox.information(self,'Reconhecimento de sentença','A sentença "%s" foi reconhecida!'%(sentence))
 			self.log('A sentença "%s" foi reconhecida!'%(sentence))
 		except Exception as err:
 			if err.args[0] == 'PARSING' and err.args[1] == '$':
 				QMessageBox.critical(self,'Reconhecimento de sentença','A sentença "%s" NÃO foi reconhecida!\n\n'%(sentence)+'O fim do reconhecimento foi alcançado, mas a sentença\nainda não havia acabado. Estava no símbolo "%s"'%(err.args[2]))
-				self.log('Erro durante reconhecimento')
-				raise Exception('Reconhecimento de sentença','Esperava "$" mas %s foi recebido'%(err.args[2]))
+				self.log('Erro durante reconhecimento de "%s", fim de reconhecimento mas a sentença estava no símbolo "%s"'%(sentence,err.args[2]))
+				raise Exception('Reconhecimento de sentença','Esperava "$" mas "%s" foi recebido'%(err.args[2]))
 			elif err.args[0] == 'PARSING' and isinstance(err.args[2],list):
 				symbols = ('", "'.join(err.args[2]))
 				QMessageBox.critical(self,'Reconhecimento de sentença','A sentença "%s" NÃO foi reconhecida!\n\n'%(sentence)+'Durante o não terminal "%s" esperava-se:\n"%s" mas "%s" foi recebido'%(err.args[1],symbols,err.args[3]))
-				self.log('Erro durante reconhecimento')
-				raise Exception('Reconhecimento de sentença','Durante "%s" esperava-se %s mas "%s" foi recebido'%(err.args[1],symbols,err.args[3]))
+				self.log('Erro durante reconhecimento de "%s", durante o não terminal "%s" esperava-se "%s" mas "%s" foi recebido'%(sentence,err.args[1],symbols,err.args[3]))
+				raise Exception('Reconhecimento de sentença','Durante "%s" esperava-se "%s" mas "%s" foi recebido'%(err.args[1],symbols,err.args[3]))
 			elif err.args[0] == 'PARSING':
 				QMessageBox.critical(self,'Reconhecimento de sentença','A sentença "%s" NÃO foi reconhecida!\n\n'%(sentence)+'Durante o não terminal "%s" esperava-se:\n"%s" mas "%s" foi recebido'%(err.args[1],err.args[2],err.args[3]))
-				self.log('Erro durante reconhecimento')
-				raise Exception('Reconhecimento de sentença','Durante "%s" esperava-se %s mas "%s" foi recebido'%(err.args[1],err.args[2],err.args[3]))
+				self.log('Erro durante reconhecimento de "%s", durante o não terminal "%s" esperava-se "%s" mas "%s" foi recebido'%(sentence,err.args[1],err.args[2],err.args[3]))
+				raise Exception('Reconhecimento de sentença','Durante "%s" esperava-se "%s" mas "%s" foi recebido'%(err.args[1],err.args[2],err.args[3]))
 			else:
 				QMessageBox.critical(self,'Erro inesperado durante reconhecimento de sentença',err.__repr__())
 				raise Exception('Erro inesperado durante reconhecimento de sentença',err.__repr__())

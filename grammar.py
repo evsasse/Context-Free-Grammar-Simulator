@@ -34,12 +34,22 @@ class Grammar():
 			symbols = symbols.strip()
 			symbols = symbols.split(' ')
 
+		if log != None:
+			log('Fazendo first de "%s"'%(' '.join(symbols)))
+
 		try:
 			if symbols == []:
+				if log != None:
+					log('= %s'%({'&'}))
 				return {'&'}
 			if symbols[0] == '&' and len(symbols) > 1:
-				return self._first(symbols[1:])
+				firsts = self._first(symbols[1:])
+				if log != None:
+					log('= %s'%(firsts))
+				return firsts
 			if symbols[0] in self._terminals:
+				if log != None:
+					log('= %s'%({symbols[0]}))
 				return {symbols[0]}
 			if symbols[0] in self._nonterminals:
 				# union of all first sets of productions related to symbol[0]
@@ -48,14 +58,17 @@ class Grammar():
 					firsts -= {'&'}
 					firsts |= self._first(symbols[1:])
 				if log != None:
-					log(firsts)
+					log('= %s'%(firsts))
 				return firsts
 		except RuntimeError:
 			raise Exception("Should check against Left Recursion before calling _first")
 
-	def _follow(self, symbol):
+	def _follow(self, symbol, log = None):
 		if symbol not in self._nonterminals:
 			raise Exception("Symbol should be on the nonterminals")
+
+		if log != None:
+			log('Fazendo follow de "%s"'%(symbol))
 
 		follow = {}
 		_follow = {}
@@ -102,9 +115,9 @@ class Grammar():
 
 		for nt in self._nonterminals:
 			try:
-				self._first([nt])
+				self._first([nt],log)
 			except Exception:
-				print(nt)
+				#print(nt)
 				nts_leads_to_lr |= {nt}
 
 		if nts_leads_to_lr == set():
@@ -126,9 +139,9 @@ class Grammar():
 				continue
 			# adds its _first in a set related to the production-left
 			if production.left not in firsts:
-				firsts[production.left] = self._first(production.right)
+				firsts[production.left] = self._first(production.right,log)
 			else:
-				_first = self._first(production.right)
+				_first = self._first(production.right,log)
 				# if there is any intersection between firsts of a same nonterminal
 				if _first & firsts[production.left]:
 					# then it's not left factored
@@ -147,13 +160,13 @@ class Grammar():
 	def _have_first_follow_conflict(self, log = None):
 		if log != None:
 			log('Verificando conflito first/follow')
-		
+
 		nts_with_conflict = set()
 
 		# for each nonterminal that can reach &
-		for nonterminal in [nt for nt in self._nonterminals if '&' in self._first(nt)]:
+		for nonterminal in [nt for nt in self._nonterminals if '&' in self._first(nt,log)]:
 			# if there is an intersection between its first and follow
-			if self._first(nonterminal) & self._follow(nonterminal):
+			if self._first(nonterminal,log) & self._follow(nonterminal):
 				#return True
 				nts_with_conflict |= {nonterminal}
 
