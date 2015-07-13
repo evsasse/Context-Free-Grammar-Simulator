@@ -33,7 +33,7 @@ class RecursiveDescentParser():
 def main(sentence):
 	global _sentence
 	global _current_symbol_position
-	_sentence = (sentence + ' $').strip().split(' ')
+	_sentence = (sentence.strip() + ' $').split(' ')
 	_current_symbol_position = -1
 	global current_symbol
 

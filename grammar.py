@@ -24,7 +24,7 @@ class Grammar():
 
 		return st
 
-	def _first(self, symbols):
+	def _first(self, symbols, log = None):
 		# CAN EASILY CAUSE STACK OVERFLOW WHEN THERE IS LEFT RECURSION
 		# Not a problem if called just on _have_first_follow_conflict
 		# because it's called just after a check for left recursion
@@ -47,6 +47,8 @@ class Grammar():
 				if '&' in firsts and len(symbols) > 1:
 					firsts -= {'&'}
 					firsts |= self._first(symbols[1:])
+				if log != None:
+					log(firsts)
 				return firsts
 		except RuntimeError:
 			raise Exception("Should check against Left Recursion before calling _first")
@@ -88,10 +90,12 @@ class Grammar():
 
 		return follow[symbol]
 
-	def is_ll1(self):
-		return not self._have_left_recursion() and self._is_left_factored() and not self._have_first_follow_conflict()
+	def is_ll1(self, log = None):
+		return not self._have_left_recursion(log) and self._is_left_factored(log) and not self._have_first_follow_conflict(log)
 
-	def _have_left_recursion(self):
+	def _have_left_recursion(self, log = None):
+		if log != None:
+			log('Verificando recursão à esquerda')
 		# unfortunately the only way I've found to make ir work :/
 
 		nts_leads_to_lr = set()
@@ -105,9 +109,13 @@ class Grammar():
 
 		if nts_leads_to_lr == set():
 			return False
+
 		raise Exception('LEFT_RECURSION',nts_leads_to_lr)
 
-	def _is_left_factored(self):
+	def _is_left_factored(self, log = None):
+		if log != None:
+			log('Verificando fatoração')
+
 		firsts = {}
 
 		nts_non_left_factored = set()
@@ -136,7 +144,10 @@ class Grammar():
 		# then is left factored
 		return True
 
-	def _have_first_follow_conflict(self):
+	def _have_first_follow_conflict(self, log = None):
+		if log != None:
+			log('Verificando conflito first/follow')
+		
 		nts_with_conflict = set()
 
 		# for each nonterminal that can reach &
