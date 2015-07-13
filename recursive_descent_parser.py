@@ -43,7 +43,7 @@ def main(sentence):
 
 	if current_symbol == '$':
 		return True
-	raise Exception('Unexpected end','$',current_symbol)'''
+	raise Exception('PARSING','$',current_symbol)'''
 		code = code%(self._grammar._initial_symbol)+"\n\n"
 		return code
 
@@ -83,7 +83,7 @@ def next_lexic_symbol():
 				for line in self._parser_code_production(production,nonterminal).split('\n'):
 					code += '''\t%s\n'''%(line)
 		if should_do_else:
-			code += '''\telse:\n\t\traise Exception('%s',%s,current_symbol)\n\n'''%(nonterminal,sorted(self._grammar._first(nonterminal)))
+			code += '''\telse:\n\t\traise Exception('PARSING','%s',%s,current_symbol)\n\n'''%(nonterminal,sorted(self._grammar._first(nonterminal)))
 		return code
 
 
@@ -102,7 +102,7 @@ def next_lexic_symbol():
 if current_symbol == '%s':
 	next_lexic_symbol()
 else:
-	raise Exception('%s','%s',current_symbol)'''
+	raise Exception('PARSING','%s','%s',current_symbol)'''
 			code = code%(symbol, nonterminal, symbol)
 		elif symbol in self._grammar._nonterminals:
 			code =	'''%s()'''

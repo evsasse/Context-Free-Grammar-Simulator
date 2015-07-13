@@ -19,9 +19,11 @@ class GUI(QDialog):
 		self.ui.btn_save.clicked.connect(self.btn_save_clicked)
 
 		self.ui.btn_verify.clicked.connect(self.btn_verify_clicked)
-		self.ui.btn_parser.clicked.connect(self.default_button_behavior)
+		self.ui.btn_parser.clicked.connect(self.btn_parser_clicked)
 
-		self.ui.btn_recognize.clicked.connect(self.default_button_behavior)
+		self.ui.btn_recognize.clicked.connect(self.btn_recognize_clicked)
+
+		self._current_parser = None
 
 	def default_button_behavior(self):
 		print("Not implemented!!!")
@@ -40,10 +42,33 @@ class GUI(QDialog):
 			QMessageBox.information(self,'Verificar se a gramática é LL(1)','A gramática é LL(1)!')
 
 	def btn_parser_clicked(self):
-		pass
+		if(self.verify_grammar_ll1()):
+			g = Grammar.text_to_grammar(self.ui.text_grammar.toPlainText())
+			r = RecursiveDescentParser(g)
+			self._current_parser = r
+			self.ui.text_parser.setText(r.parser_code().strip().replace('\t','    '))
+			QMessageBox.information(self,'Geração do parser descendente recursivo','O parser foi gerado!')
 
 	def btn_recognize_clicked(self):
-		pass
+		if self._current_parser == None:
+			QMessageBox.critical(self,'Reconhecimento de sentença','O parser ainda não foi gerado!')
+			raise Exception('Reconhecimento de sentença','O parser ainda não foi gerado!')
+
+		try:
+			sentence = self.ui.line_sentence.text()
+			self._current_parser.parse(sentence)
+			QMessageBox.information(self,'Reconhecimento de sentença','A sentença "%s" foi reconhecida!'%(sentence))
+		except Exception as err:
+			if err.args[0] == 'PARSING' and err.args[1] == '$':
+				QMessageBox.critical(self,'Reconhecimento de sentença','A sentença "%s" NÃO foi reconhecida!\n\n'%(sentence)+'O fim do reconhecimento foi alcançado, mas a sentença\nainda não havia acabado. Estava no símbolo "%s"'%(err.args[2]))
+				raise Exception('Reconhecimento de sentença','Esperava "$" mas %s foi recebido'%(err.args[2]))
+			elif err.args[0] == 'PARSING' and isinstance(err.args[2],list):
+				symbols = ('", "'.join(err.args[2]))
+				QMessageBox.critical(self,'Reconhecimento de sentença','A sentença "%s" NÃO foi reconhecida!\n\n'%(sentence)+'Durante o não terminal "%s" esperava-se:\n"%s" mas "%s" foi recebido'%(err.args[1],symbols,err.args[3]))
+				raise Exception('Reconhecimento de sentença','Durante "%s" esperava-se %s mas "%s" foi recebido'%(err.args[1],symbols,err.args[3]))
+			elif err.args[0] == 'PARSING':
+				QMessageBox.critical(self,'Reconhecimento de sentença','A sentença "%s" NÃO foi reconhecida!\n\n'%(sentence)+'Durante o não terminal "%s" esperava-se:\n"%s" mas "%s" foi recebido'%(err.args[1],err.args[2],err.args[3]))
+				raise Exception('Reconhecimento de sentença','Durante "%s" esperava-se %s mas "%s" foi recebido'%(err.args[1],err.args[2],err.args[3]))
 
 	def verify_grammar_ll1(self):
 		try:
@@ -72,7 +97,7 @@ class GUI(QDialog):
 				QMessageBox.critical(self,'Erro inesperado',err.__repr__())
 				raise Exception('Erro inesperado',err.__repr__())
 
-		return true
+		return True
 
 app = QApplication(sys.argv)
 window = GUI()

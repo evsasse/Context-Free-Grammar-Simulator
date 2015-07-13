@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>622</width>
+    <width>797</width>
     <height>582</height>
    </rect>
   </property>
@@ -36,7 +36,7 @@
     <rect>
      <x>0</x>
      <y>440</y>
-     <width>621</width>
+     <width>791</width>
      <height>141</height>
     </rect>
    </property>
@@ -48,7 +48,7 @@
      <rect>
       <x>0</x>
       <y>20</y>
-      <width>621</width>
+      <width>791</width>
       <height>121</height>
      </rect>
     </property>
@@ -68,7 +68,7 @@
     <rect>
      <x>250</x>
      <y>0</y>
-     <width>371</width>
+     <width>541</width>
      <height>449</height>
     </rect>
    </property>
@@ -80,7 +80,7 @@
      <rect>
       <x>0</x>
       <y>20</y>
-      <width>371</width>
+      <width>541</width>
       <height>421</height>
      </rect>
     </property>
@@ -90,12 +90,19 @@
        <property name="readOnly">
         <bool>true</bool>
        </property>
+       <property name="placeholderText">
+        <string>O código do parser aparecerá aqui depois de gerado</string>
+       </property>
       </widget>
      </item>
      <item>
       <layout class="QHBoxLayout" name="horizontalLayout_2">
        <item>
-        <widget class="QLineEdit" name="line_sentence"/>
+        <widget class="QLineEdit" name="line_sentence">
+         <property name="placeholderText">
+          <string>Coloque espaço entre cada símbolo!</string>
+         </property>
+        </widget>
        </item>
        <item>
         <widget class="QPushButton" name="btn_recognize">
@@ -148,7 +155,11 @@
       </widget>
      </item>
      <item>
-      <widget class="QTextEdit" name="text_grammar"/>
+      <widget class="QTextEdit" name="text_grammar">
+       <property name="placeholderText">
+        <string>A -&gt; a A | b</string>
+       </property>
+      </widget>
      </item>
      <item>
       <widget class="QPushButton" name="btn_verify">
